@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add a New Pet</title>
+</head>
+<body>
+    <h1>Add a New Pet</h1>
+
+    <form method="POST">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <!-- selector for pet options -->
+        <label for="pet_type">Type:</label><br>
+        <select id="pet_type" name="pet_type" required>
+            <option value="Dog">Dog</option>
+            <option value="Cat">Cat</option>
+            <option value="Cat">Rabbit</option>
+            <option value="Cat">Turtle</option>
+        </select><br><br>
+
+        <label for="age">Age:</label><br>
+        <input type="number" id="age" name="age" min="0" required><br><br>
+
+        <label for="species">Species:</label><br>
+        <input type="text" id="species" name="species" required><br><br>
+
+        <input type="submit" value="Add Pet">
+    </form>
+
+    <br>
+    <a href="{{ url_for('show_pets') }}">Back to Pet List</a>
+</body>
+</html>

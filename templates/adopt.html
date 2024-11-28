@@ -1,0 +1,39 @@
+<!-- adopt.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adopt a Pet</title>
+</head>
+<body>
+    <h1>Adopt a Pet</h1>
+
+    <!-- pet exists -->
+    {% if pet %}
+        <h3>Pet Details</h3>
+        <p><strong>Name:</strong> {{ pet['name'] }}</p>
+        <p><strong>Type:</strong> {{ pet['type'] }}</p>
+        <p><strong>Age:</strong> {{ pet['age'] }}</p>
+        <p><strong>Species:</strong> {{ pet['species'] }}</p>
+        <p><strong>Adopted:</strong> {{ 'Yes' if pet['adopted'] else 'No' }}</p>
+
+        <!-- adoption status -->
+        {% if pet['adopted'] %}
+            <p>This pet has already been adopted!</p>
+        {% else %}
+            <form method="POST">
+                <input type="submit" value="Adopt Pet">
+            </form>
+        {% endif %}
+
+        <p>{{ message }}</p>
+
+    {% else %}
+        <p>Pet not found.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('show_pets') }}">Back to Pet List</a>
+</body>
+</html>
