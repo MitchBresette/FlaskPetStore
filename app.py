@@ -52,6 +52,7 @@ def show_pets():
 
     return render_template('pets.html', pets=pet_list)
 
+
 # ADD PETS
 @app.route('/add_pets', methods=['GET', 'POST'])
 def add_pets():
@@ -80,6 +81,7 @@ def add_pets():
 
     return render_template('add_pets.html')
 
+
 # ADOPT PET
 @app.route('/adopt/<pet_id>', methods=['GET', 'POST'])
 def adopt_pet(pet_id):
@@ -88,11 +90,11 @@ def adopt_pet(pet_id):
     if request.method == 'POST':
         if pet:
             if pet['adopted']:
-                return render_template('adopt.html', message="Sorry, this pet has already been adopted")
+                return render_template('adopt.html', message="Sorry, this pet has already been adopted", pet=pet)
 
-            # Update the pet's adopted status to True
+            # Mark pet as adopted
             mongo.db.pets.update_one({'_id': ObjectId(pet_id)}, {'$set': {'adopted': True}})
-            return render_template('adopt.html', message=f"Pet {pet['name']} has been adopted!")
+            return render_template('adopt.html', message=f"Pet {pet['name']} has been successfully adopted!", pet=pet)
 
         return render_template('adopt.html', message="Pet not found")
 
