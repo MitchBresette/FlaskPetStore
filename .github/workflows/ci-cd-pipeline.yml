@@ -13,7 +13,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # Step 1: Checkout from GitHub
+      # Step 1: Checkout the repository from GitHub
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.10'
+          python-version: '3.10.4'
 
       # Step 3: Install dependencies
       - name: Install dependencies
@@ -39,23 +39,27 @@ jobs:
           source venv/bin/activate
           pytest  # Runs all tests using pytest
 
-      # Step 5: Install Docker and AWS CLI on the EC2 instance
-      - name: Install Docker and AWS CLI
-        run: |
-          sudo yum update -y
-          sudo yum install docker awscli -y
-          sudo service docker start
-          sudo usermod -aG docker ec2-user
-
-      # Step 6: Deploy the application to EC2
+      # Step 5: Deploy to EC2
       - name: Deploy to EC2
+        env:
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
+          # Install AWS CLI and Git on the EC2 instance
+          sudo apt-get update
+          sudo apt-get install awscli git -y
+
           # Clone the repository to the EC2 instance
           git clone https://github.com/MitchBresette/FlaskPetStore.git /home/ec2-user/petstore
 
           # Change directory to the project folder
           cd /home/ec2-user/petstore
 
-          # Run Docker container using docker-compose
+          # Install Docker and start the app
+          sudo yum install docker -y  # Install Docker (for Amazon Linux 2)
+          sudo service docker start    # Start Docker service
+          sudo usermod -a -G docker ec2-user  # Allow EC2 user to run Docker commands
+
+          # Run the Docker container using docker-compose
           docker-compose pull
           docker-compose up -d
