@@ -13,5 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose port 5000 to the outside world
 EXPOSE 5000
 
-# Define the default command to run your application
-ENTRYPOINT ["python", "app.py"]
+CMD ["python", "app.py"]

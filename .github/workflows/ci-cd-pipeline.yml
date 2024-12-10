@@ -10,14 +10,14 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted  # Use self-hosted runner if you want to run on EC2
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout the repository from GitHub
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up Python environment
+      # Step 2: Set up Python environment (for running tests)
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -34,41 +34,7 @@ jobs:
       # Step 4: Build Docker image
       - name: Build Docker image
         run: |
+      
           docker build -t flask-petstore .
-
-      # Step 5: Set up AWS credentials
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
-
-      # Step 6: Install Docker and AWS CLI on the EC2 instance
-      - name: Install Docker and AWS CLI on EC2
-        run: |
-          # Make sure you're running this on Amazon Linux (use yum)
-          sudo yum update -y
-          sudo yum install docker awscli -y
-          sudo service docker start
-          sudo usermod -aG docker ec2-user  # Allow EC2 user to run Docker commands
-
-      # Step 7: Deploy to EC2
-      - name: Deploy to EC2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-2
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          # SSH into EC2 instance and deploy
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_PRIVATE_KEY }} ec2-user@${{ secrets.EC2_PUBLIC_IP }} <<EOF
-            # Clone the repository to EC2 if not already present
-            git clone https://github.com/MitchBresette/FlaskPetStore.git /home/ec2-user/petstore
-            cd /home/ec2-user/petstore
-
-            # Build and run Docker container on EC2
-            docker-compose pull
-            docker-compose up -d
-          EOF
+          
+          docker run -d -p 5000:5000 flask-petstore
