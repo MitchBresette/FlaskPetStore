@@ -1,0 +1,71 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository from GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'  # Adjust to the Python version you are using
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      # Step 4: Run tests
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          pytest  # Runs all tests using pytest
+
+      # Step 5: Set up AWS credentials
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      # Step 6: Deploy to EC2 instance
+      - name: Deploy to EC2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-2
+        run: |
+          # Install AWS CLI and Git on the EC2 instance
+          sudo apt-get update
+          sudo apt-get install awscli git -y
+
+          # Clone the repository to the EC2 instance
+          git clone https://github.com/MitchBresette/FlaskPetStore.git /home/ec2-user/petstore
+
+          # Change directory to the project folder
+          cd /home/ec2-user/petstore
+
+          # Install Docker and start the app
+          sudo yum install docker -y  # Install Docker (for Amazon Linux 2)
+          sudo service docker start    # Start Docker service
+          sudo usermod -a -G docker ec2-user  # Allow EC2 user to run Docker commands
+
+          # Run the Docker container using docker-compose
+          docker-compose pull
+          docker-compose up -d
