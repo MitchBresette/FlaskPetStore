@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up Python environment (for running tests)
+      # Step 2: Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -33,3 +33,26 @@ jobs:
         env:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      # Step 4: Build Docker image and push it to Docker Hub
+      - name: Build Docker image and push to Docker Hub
+        run: |
+          docker build -t mitchbresette/flask-petstore:latest .
+          docker push mitchbresette/flask-petstore:latest
+
+      # Step 5: Deploy to EC2
+      - name: Deploy to EC2
+        env:
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          # SSH into EC2 and pull the latest image from Docker Hub
+          ssh -o StrictHostKeyChecking=no -i <(echo "${{ secrets.EC2_PRIVATE_KEY }}") ec2-user@${{ secrets.EC2_PUBLIC_IP }} <<EOF
+            # Pull the latest Docker image from Docker Hub
+            docker pull mitchbresette/flask-petstore:latest
+            # Stop any running container
+            docker stop flask-petstore || true
+            docker rm flask-petstore || true
+            # Run the Docker container
+            docker run -d --name flask-petstore -p 5000:5000 mitchbresette/flask-petstore:latest
+          EOF
