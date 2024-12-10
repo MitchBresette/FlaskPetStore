@@ -10,10 +10,10 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: aws-debian-runner-1
 
     steps:
-      # Step 1: Checkout the repository from GitHub
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -21,45 +21,33 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-         python-version: '3.9'
+          python-version: '3.10'
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      # Step 3: Install dependencies and run tests
+      - name: Install dependencies and run tests
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
+          pytest  # Run tests using pytest
 
-      # Step 4: Run tests
-      - name: Run tests
-        env:
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      # Step 4: Build Docker image
+      - name: Build Docker image
         run: |
-          source venv/bin/activate
-          pytest  # Runs all tests using pytest
+          docker build -t flask-petstore .
 
       # Step 5: Deploy to EC2
       - name: Deploy to EC2
-        env:
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          # Install AWS CLI and Git on the EC2 instance
-          sudo apt-get update
-          sudo apt-get install awscli git -y
-
-          # Clone the repository to the EC2 instance
-          git clone https://github.com/MitchBresette/FlaskPetStore.git /home/ec2-user/petstore
-
-          # Change directory to the project folder
+          # Ensure Docker is installed and running (if not already done)
+          sudo yum update -y
+          sudo yum install docker -y
+          sudo service docker start
+          sudo usermod -a -G docker ec2-user
+          
+          # Navigate to the project directory
+          cd /home/ec2-user/petstore || git clone https://github.com/MitchBresette/FlaskPetStore.git /home/ec2-user/petstore
+          
+          # Deploy the app using Docker Compose
           cd /home/ec2-user/petstore
-
-          # Install Docker and start the app
-          sudo yum install docker -y  # Install Docker (for Amazon Linux 2)
-          sudo service docker start    # Start Docker service
-          sudo usermod -a -G docker ec2-user  # Allow EC2 user to run Docker commands
-
-          # Run the Docker container using docker-compose
-          docker-compose pull
           docker-compose up -d
