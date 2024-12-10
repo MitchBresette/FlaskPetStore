@@ -51,8 +51,12 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
+          # Save the private key to a file
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > /tmp/private_key.pem
+          chmod 600 /tmp/private_key.pem
+          
           # SSH into EC2 and pull the latest image from Docker Hub
-          ssh -o StrictHostKeyChecking=no -i <(echo "${{ secrets.EC2_PRIVATE_KEY }}") ec2-user@${{ secrets.EC2_PUBLIC_IP }} <<EOF
+          ssh -o StrictHostKeyChecking=no -i /tmp/private_key.pem ec2-user@${{ secrets.EC2_PUBLIC_IP }} <<EOF
             # Pull the latest Docker image from Docker Hub
             docker pull mitchbresette/flask-petstore:latest
             # Stop any running container (optional)
